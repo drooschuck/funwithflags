@@ -122,7 +122,7 @@ const App: React.FC = () => {
         )}
       </div>
        <footer className="mt-8 text-center text-gray-500">
-        <p>Built with React, Tailwind, and a love for geography.</p>
+        <p>Built by A. Araho, Dedicated to Yusuf Araho who loves geography.</p>
       </footer>
     </div>
   );
