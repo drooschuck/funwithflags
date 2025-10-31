@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { FLAG_QUESTIONS } from './constants';
 import { AnswerState } from './types';
@@ -30,14 +29,8 @@ const App: React.FC = () => {
     if (option === currentQuestion.correctAnswer) {
       setAnswerState(AnswerState.CORRECT);
       setScore(prev => prev + 1);
-      setTimeout(() => {
-        handleNextQuestion();
-      }, 1500);
     } else {
       setAnswerState(AnswerState.INCORRECT);
-      setTimeout(() => {
-        handleNextQuestion();
-      }, 1500);
     }
   };
   
@@ -85,6 +78,10 @@ const App: React.FC = () => {
           </div>
         ) : (
           <>
+            <div className="flex justify-between items-center text-gray-500 text-sm mb-6">
+              <p className="font-medium">Score: <span className="text-lg font-bold text-indigo-600">{score}</span></p>
+              <p className="font-medium">Question {currentQuestionIndex + 1} / {FLAG_QUESTIONS.length}</p>
+            </div>
             <div className="mb-6">
               <img
                 src={currentQuestion.flagUrl}
@@ -104,9 +101,23 @@ const App: React.FC = () => {
                 </button>
               ))}
             </div>
-             <div className="mt-6 text-center text-gray-500 text-sm">
-                Question {currentQuestionIndex + 1} of {FLAG_QUESTIONS.length}
-             </div>
+
+            {answerState !== AnswerState.IDLE && (
+              <div className="mt-6 text-center">
+                {answerState === AnswerState.CORRECT && (
+                  <p className="text-xl font-bold text-green-600">Bazinga! You got it right!</p>
+                )}
+                {answerState === AnswerState.INCORRECT && (
+                  <p className="text-xl font-bold text-red-600">Oops! That's not correct.</p>
+                )}
+                <button
+                  onClick={handleNextQuestion}
+                  className="mt-4 bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300"
+                >
+                  Next Flag
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
