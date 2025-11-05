@@ -25,7 +25,7 @@ const HomePage: React.FC<HomePageProps> = ({ startQuiz, showFacts }) => {
         </button>
       </div>
        <footer className="mt-8 text-center text-gray-500">
-        <p>An interactive geography experience.</p>
+        <p>An interactive geography experience. Dedicated to Y. Araho </p>
       </footer>
     </div>
   );
