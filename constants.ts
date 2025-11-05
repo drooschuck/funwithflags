@@ -126,4 +126,49 @@ export const FLAG_QUESTIONS: FlagQuestion[] = [
     options: ['Italy', 'Ireland', 'Ivory Coast'],
     correctAnswer: 'Ireland',
   },
+  {
+    flagUrl: 'https://flagcdn.com/w320/ke.png',
+    options: ['Kenya', 'Ethiopia', 'Somalia'],
+    correctAnswer: 'Kenya',
+  },
+  {
+    flagUrl: 'https://flagcdn.com/w320/tz.png',
+    options: ['Tanzania', 'Kenya', 'Mozambique'],
+    correctAnswer: 'Tanzania',
+  },
+  {
+    flagUrl: 'https://flagcdn.com/w320/ug.png',
+    options: ['Rwanda', 'Uganda', 'Kenya'],
+    correctAnswer: 'Uganda',
+  },
+  {
+    flagUrl: 'https://flagcdn.com/w320/et.png',
+    options: ['Ethiopia', 'Eritrea', 'Sudan'],
+    correctAnswer: 'Ethiopia',
+  },
+  {
+    flagUrl: 'https://flagcdn.com/w320/rw.png',
+    options: ['Burundi', 'DR Congo', 'Rwanda'],
+    correctAnswer: 'Rwanda',
+  },
+  {
+    flagUrl: 'https://flagcdn.com/w320/so.png',
+    options: ['Djibouti', 'Somalia', 'Ethiopia'],
+    correctAnswer: 'Somalia',
+  },
+  {
+    flagUrl: 'https://flagcdn.com/w320/ss.png',
+    options: ['South Sudan', 'Sudan', 'Uganda'],
+    correctAnswer: 'South Sudan',
+  },
+  {
+    flagUrl: 'https://flagcdn.com/w320/bi.png',
+    options: ['Tanzania', 'Rwanda', 'Burundi'],
+    correctAnswer: 'Burundi',
+  },
+  {
+    flagUrl: 'https://flagcdn.com/w320/er.png',
+    options: ['Eritrea', 'Ethiopia', 'Djibouti'],
+    correctAnswer: 'Eritrea',
+  },
 ];
