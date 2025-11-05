@@ -1,5 +1,8 @@
 import React from 'react';
 import { supabase } from './supabaseClient';
+import { trackEvent } from './analytics';
+import AdBanner from './AdBanner';
+import AffiliateCard from './AffiliateCard';
 
 interface HomePageProps {
   startQuiz: () => void;
@@ -13,6 +16,14 @@ const HomePage: React.FC<HomePageProps> = ({ startQuiz, showFacts, userEmail }) 
     await supabase.auth.signOut();
   };
 
+  const handleStartQuiz = () => {
+    trackEvent('quiz_start', {
+      category: 'Quiz',
+      label: 'Start Quiz From Home'
+    });
+    startQuiz();
+  };
+
   return (
     <div className="text-center">
       <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-8 animate-fade-in-down">Fun with Flags</h1>
@@ -21,7 +32,7 @@ const HomePage: React.FC<HomePageProps> = ({ startQuiz, showFacts, userEmail }) 
             <p className="text-lg text-gray-600">Welcome, <span className="font-bold text-indigo-600">{userEmail}</span>!</p>
             <p className="text-gray-600">Test your knowledge or learn something new about the world's flags and countries.</p>
             <button
-            onClick={startQuiz}
+            onClick={handleStartQuiz}
             className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300"
             >
             Start Quiz
@@ -40,9 +51,10 @@ const HomePage: React.FC<HomePageProps> = ({ startQuiz, showFacts, userEmail }) 
             Sign Out
         </button>
       </div>
-       <footer className="mt-8 text-center text-gray-500">
-        <p>An interactive geography experience.</p>
-      </footer>
+      <div className="mt-8 w-full max-w-sm space-y-4">
+        <AffiliateCard />
+        <AdBanner />
+      </div>
     </div>
   );
 };

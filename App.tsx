@@ -4,6 +4,8 @@ import HomePage from './HomePage';
 import QuizPage from './QuizPage';
 import FactsPage from './FactsPage';
 import AuthPage from './AuthPage';
+import PremiumPage from './PremiumPage';
+import Footer from './Footer';
 import { supabase } from './supabaseClient';
 import { Page } from './types';
 import { FLAG_QUESTIONS } from './constants';
@@ -57,23 +59,40 @@ const App: React.FC = () => {
       }
   };
 
+  const navigateTo = (page: Page) => setCurrentPage(page);
 
   const renderAuthenticatedApp = () => {
     if (!session) return null;
 
+    let pageComponent;
     switch (currentPage) {
       case 'quiz':
-        return <QuizPage goToHome={() => setCurrentPage('home')} />;
+        pageComponent = <QuizPage goToHome={() => navigateTo('home')} />;
+        break;
       case 'facts':
-        return <FactsPage goToHome={() => setCurrentPage('home')} />;
+        pageComponent = <FactsPage goToHome={() => navigateTo('home')} />;
+        break;
+      case 'premium':
+        pageComponent = <PremiumPage goToHome={() => navigateTo('home')} />;
+        break;
       case 'home':
       default:
-        return <HomePage 
-                  userEmail={session.user.email} 
-                  startQuiz={() => setCurrentPage('quiz')} 
-                  showFacts={() => setCurrentPage('facts')} 
-                />;
+        pageComponent = <HomePage 
+                          userEmail={session.user.email} 
+                          startQuiz={() => navigateTo('quiz')} 
+                          showFacts={() => navigateTo('facts')} 
+                        />;
+        break;
     }
+
+    return (
+      <div className="w-full flex flex-col items-center justify-center min-h-screen">
+        <main className="w-full flex-grow flex flex-col items-center justify-center p-4">
+          {pageComponent}
+        </main>
+        <Footer goToPremium={() => navigateTo('premium')} />
+      </div>
+    );
   };
 
   return (

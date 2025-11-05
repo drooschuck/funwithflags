@@ -1,8 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { supabase } from './supabaseClient';
 import { FLAG_QUESTIONS } from './constants';
 import { AnswerState } from './types';
+import { trackEvent } from './analytics';
+import AdBanner from './AdBanner';
+import AffiliateCard from './AffiliateCard';
 
 interface QuizPageProps {
   goToHome: () => void;
@@ -19,6 +22,16 @@ const QuizPage: React.FC<QuizPageProps> = ({ goToHome }) => {
 
   const currentQuestion = FLAG_QUESTIONS[currentQuestionIndex];
 
+  useEffect(() => {
+    if (isFinished) {
+      trackEvent('quiz_complete', {
+        category: 'Quiz',
+        label: `Final Score: ${score}`,
+        value: score
+      });
+    }
+  }, [isFinished, score]);
+
   const fetchFunFact = useCallback(async (countryName: string) => {
     if (funFacts[countryName]) {
       return; 
@@ -26,14 +39,13 @@ const QuizPage: React.FC<QuizPageProps> = ({ goToHome }) => {
     setIsFetchingFact(true);
     
     try {
-      // 1. Check database first
       const { data: country, error: dbError } = await supabase
         .from('countries')
         .select('fun_fact')
         .eq('name', countryName)
         .single();
 
-      if (dbError && dbError.code !== 'PGRST116') { // PGRST116: 'exact one row not found'
+      if (dbError && dbError.code !== 'PGRST116') {
           throw dbError;
       }
 
@@ -42,7 +54,6 @@ const QuizPage: React.FC<QuizPageProps> = ({ goToHome }) => {
         return;
       }
 
-      // 2. If not in DB, fetch from Gemini API
       const apiKey = process.env.API_KEY;
       if (!apiKey || apiKey === "undefined") {
         throw new Error("Gemini API key is missing or not configured.");
@@ -55,7 +66,6 @@ const QuizPage: React.FC<QuizPageProps> = ({ goToHome }) => {
       const fact = response.text;
       setFunFacts(prevFacts => ({ ...prevFacts, [countryName]: fact }));
       
-      // 3. Store new fact in the database
       const { error: upsertError } = await supabase
         .from('countries')
         .upsert({ name: countryName, fun_fact: fact }, { onConflict: 'name' });
@@ -146,6 +156,9 @@ const QuizPage: React.FC<QuizPageProps> = ({ goToHome }) => {
             >
               Play Again
             </button>
+            <div className="mt-6">
+                <AffiliateCard />
+            </div>
           </div>
         ) : (
           <>
@@ -171,6 +184,10 @@ const QuizPage: React.FC<QuizPageProps> = ({ goToHome }) => {
                   {option}
                 </button>
               ))}
+            </div>
+
+            <div className="my-4">
+                <AdBanner />
             </div>
 
             {answerState !== AnswerState.IDLE && (
@@ -204,9 +221,6 @@ const QuizPage: React.FC<QuizPageProps> = ({ goToHome }) => {
           </>
         )}
       </div>
-       <footer className="mt-8 text-center text-gray-500">
-        <p>Built with React, Tailwind, and a love for geography.</p>
-      </footer>
     </>
   );
 };

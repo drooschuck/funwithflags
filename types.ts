@@ -10,7 +10,7 @@ export enum AnswerState {
   INCORRECT
 }
 
-export type Page = 'home' | 'quiz' | 'facts';
+export type Page = 'home' | 'quiz' | 'facts' | 'premium';
 
 export interface CountryData {
   flagColorMeaning: string;
