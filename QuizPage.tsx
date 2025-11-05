@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { GoogleGenAI } from "@google/genai";
+import { supabase } from './supabaseClient';
 import { FLAG_QUESTIONS } from './constants';
 import { AnswerState } from './types';
 
@@ -22,24 +23,53 @@ const QuizPage: React.FC<QuizPageProps> = ({ goToHome }) => {
     if (funFacts[countryName]) {
       return; 
     }
-
     setIsFetchingFact(true);
+    
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      // 1. Check database first
+      const { data: country, error: dbError } = await supabase
+        .from('countries')
+        .select('fun_fact')
+        .eq('name', countryName)
+        .single();
+
+      if (dbError && dbError.code !== 'PGRST116') { // PGRST116: 'exact one row not found'
+          throw dbError;
+      }
+
+      if (country && country.fun_fact) {
+        setFunFacts(prev => ({ ...prev, [countryName]: country.fun_fact as string }));
+        return;
+      }
+
+      // 2. If not in DB, fetch from Gemini API
+      const apiKey = process.env.API_KEY;
+      if (!apiKey || apiKey === "undefined") {
+        throw new Error("Gemini API key is missing or not configured.");
+      }
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: `Tell me a fun and interesting fact about ${countryName}. Keep it concise and engaging, under 200 characters.`
       });
       const fact = response.text;
+      setFunFacts(prevFacts => ({ ...prevFacts, [countryName]: fact }));
+      
+      // 3. Store new fact in the database
+      const { error: upsertError } = await supabase
+        .from('countries')
+        .upsert({ name: countryName, fun_fact: fact }, { onConflict: 'name' });
+      
+      if (upsertError) {
+        console.error("Error saving fun fact to DB:", upsertError);
+      }
+
+    } catch (error: any) {
+      const errorMessage = error?.message || "An unknown error occurred.";
+      console.error("Error fetching or processing fun fact:", errorMessage, error);
       setFunFacts(prevFacts => ({
         ...prevFacts,
-        [countryName]: fact,
-      }));
-    } catch (error) {
-      console.error("Error fetching fun fact:", error);
-      setFunFacts(prevFacts => ({
-        ...prevFacts,
-        [countryName]: 'Could not fetch a fun fact at this time.',
+        [countryName]: `Could not load a fun fact. ${errorMessage}`,
       }));
     } finally {
       setIsFetchingFact(false);
@@ -154,7 +184,7 @@ const QuizPage: React.FC<QuizPageProps> = ({ goToHome }) => {
 
                 <div className="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200 min-h-[100px] flex items-center justify-center">
                   {isFetchingFact ? (
-                    <p className="text-indigo-700 animate-pulse">Fetching a fun fact...</p>
+                    <p className="text-indigo-700 animate-pulse">Loading amazing fact...</p>
                   ) : (
                     <div>
                       <h3 className="font-bold text-indigo-800 mb-1">Did you know?</h3>

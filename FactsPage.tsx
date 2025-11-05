@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
+import { supabase } from './supabaseClient';
 import { FLAG_QUESTIONS } from './constants';
 import { CountryData } from './types';
 
@@ -105,7 +106,28 @@ const FactsPage: React.FC<FactsPageProps> = ({ goToHome }) => {
     setCountryData(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      // 1. Check database first
+      const { data: country, error: dbError } = await supabase
+        .from('countries')
+        .select('detailed_data')
+        .eq('name', selectedCountry)
+        .single();
+
+      if (dbError && dbError.code !== 'PGRST116') throw dbError;
+
+      if (country && country.detailed_data) {
+        const data = country.detailed_data as CountryData;
+        setCountryData(data);
+        setFactsCache(prev => ({ ...prev, [selectedCountry]: data }));
+        return;
+      }
+      
+      // 2. Fetch from Gemini API if not in DB
+      const apiKey = process.env.API_KEY;
+      if (!apiKey || apiKey === "undefined") {
+          throw new Error("Gemini API key is missing or not configured.");
+      }
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-pro',
         contents: `Provide detailed information for the country: ${selectedCountry}.`,
@@ -119,9 +141,17 @@ const FactsPage: React.FC<FactsPageProps> = ({ goToHome }) => {
       setCountryData(data);
       setFactsCache(prev => ({ ...prev, [selectedCountry]: data }));
 
-    } catch (err) {
-      console.error("Error fetching country data:", err);
-      setError("Sorry, we couldn't fetch the facts for this country. Please try another one.");
+      // 3. Store new data in the database
+      const { error: upsertError } = await supabase
+        .from('countries')
+        .upsert({ name: selectedCountry, detailed_data: data }, { onConflict: 'name' });
+      
+      if (upsertError) throw upsertError;
+
+    } catch (err: any) {
+      const errorMessage = err?.message || "An unknown error occurred.";
+      console.error("Error fetching country data:", errorMessage, err);
+      setError(`Sorry, we couldn't fetch the facts for this country. ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }

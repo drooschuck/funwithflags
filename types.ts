@@ -32,3 +32,11 @@ export interface CountryData {
   };
   neighboringCountries: string[];
 }
+
+export interface DatabaseCountry {
+    id?: number;
+    name: string;
+    flag_url: string;
+    fun_fact?: string;
+    detailed_data?: CountryData;
+}
