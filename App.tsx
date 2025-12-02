@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Session } from '@supabase/supabase-js';
 import HomePage from './HomePage';
 import QuizPage from './QuizPage';
 import FactsPage from './FactsPage';
-import AuthPage from './AuthPage';
 import PremiumPage from './PremiumPage';
 import Footer from './Footer';
 import { supabase } from './supabaseClient';
@@ -11,24 +9,11 @@ import { Page } from './types';
 import { FLAG_QUESTIONS } from './constants';
 
 const App: React.FC = () => {
-  const [session, setSession] = useState<Session | null>(null);
   const [currentPage, setCurrentPage] = useState<Page>('home');
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        if (_event === 'SIGNED_IN') {
-          syncCountriesWithDb();
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
+    // Attempt to sync countries on mount, though RLS might block it if not configured for public access.
+    syncCountriesWithDb();
   }, []);
 
   const syncCountriesWithDb = async () => {
@@ -61,43 +46,31 @@ const App: React.FC = () => {
 
   const navigateTo = (page: Page) => setCurrentPage(page);
 
-  const renderAuthenticatedApp = () => {
-    if (!session) return null;
-
-    let pageComponent;
+  const renderPage = () => {
     switch (currentPage) {
       case 'quiz':
-        pageComponent = <QuizPage goToHome={() => navigateTo('home')} />;
-        break;
+        return <QuizPage goToHome={() => navigateTo('home')} />;
       case 'facts':
-        pageComponent = <FactsPage goToHome={() => navigateTo('home')} />;
-        break;
+        return <FactsPage goToHome={() => navigateTo('home')} />;
       case 'premium':
-        pageComponent = <PremiumPage goToHome={() => navigateTo('home')} />;
-        break;
+        return <PremiumPage goToHome={() => navigateTo('home')} />;
       case 'home':
       default:
-        pageComponent = <HomePage 
-                          userEmail={session.user.email} 
-                          startQuiz={() => navigateTo('quiz')} 
-                          showFacts={() => navigateTo('facts')} 
-                        />;
-        break;
+        return <HomePage 
+                  startQuiz={() => navigateTo('quiz')} 
+                  showFacts={() => navigateTo('facts')} 
+                />;
     }
-
-    return (
-      <div className="w-full flex flex-col items-center justify-center min-h-screen">
-        <main className="w-full flex-grow flex flex-col items-center justify-center p-4">
-          {pageComponent}
-        </main>
-        <Footer goToPremium={() => navigateTo('premium')} />
-      </div>
-    );
   };
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen flex flex-col items-center justify-center p-4 font-sans text-gray-800">
-      {session ? renderAuthenticatedApp() : <AuthPage />}
+      <div className="w-full flex flex-col items-center justify-center min-h-screen">
+        <main className="w-full flex-grow flex flex-col items-center justify-center p-4">
+          {renderPage()}
+        </main>
+        <Footer goToPremium={() => navigateTo('premium')} />
+      </div>
     </div>
   );
 };
