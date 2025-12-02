@@ -9,7 +9,10 @@ import { Page } from './types';
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('home');
 
-  const navigateTo = (page: Page) => setCurrentPage(page);
+  const navigateTo = (page: Page) => {
+    window.scrollTo(0, 0);
+    setCurrentPage(page);
+  };
 
   const renderPage = () => {
     switch (currentPage) {
@@ -29,12 +32,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen flex flex-col items-center justify-center p-4 font-sans text-gray-800">
-      <div className="w-full flex flex-col items-center justify-center min-h-screen">
-        <main className="w-full flex-grow flex flex-col items-center justify-center p-4">
+    <div className="bg-gradient-to-br from-indigo-50 to-blue-100 min-h-screen flex flex-col items-center font-sans text-gray-800">
+      <div className="w-full max-w-4xl flex flex-col min-h-screen shadow-2xl bg-white/50 md:bg-transparent">
+        <main className="flex-grow flex flex-col p-4 md:p-6 w-full max-w-2xl mx-auto">
           {renderPage()}
         </main>
-        <Footer goToPremium={() => navigateTo('premium')} />
+        <div className="p-4 md:p-6 w-full max-w-2xl mx-auto">
+          <Footer goToPremium={() => navigateTo('premium')} />
+        </div>
       </div>
     </div>
   );

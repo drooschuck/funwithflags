@@ -1,5 +1,6 @@
 export interface FlagQuestion {
-  flagUrl: string;
+  questionText?: string; // Optional for flag-only quizzes
+  flagUrl?: string; // Optional for text-only quizzes
   options: string[];
   correctAnswer: string;
 }
@@ -12,8 +13,15 @@ export enum AnswerState {
 
 export type Page = 'home' | 'quiz' | 'facts' | 'premium';
 
+export type QuizMode = 'flag-to-country' | 'country-to-capital' | 'country-to-continent';
+export type Difficulty = 'beginner' | 'intermediate' | 'expert';
+
 export interface CountryData {
-  flagColorMeaning: string;
+  flagAnatomy: {
+    description: string;
+    colors: { color: string; meaning: string }[];
+    symbols: { symbol: string; meaning: string }[];
+  };
   countryInfo: {
     sovereignState: string;
     countryCodes: string;
@@ -31,6 +39,7 @@ export interface CountryData {
     internetTLD: string;
   };
   neighboringCountries: string[];
+  funFact: string;
 }
 
 export interface DatabaseCountry {
