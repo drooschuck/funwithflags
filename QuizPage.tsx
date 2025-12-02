@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { supabase } from './supabaseClient';
 import { FLAG_QUESTIONS } from './constants';
 import { AnswerState } from './types';
 import { trackEvent } from './analytics';
@@ -39,21 +38,6 @@ const QuizPage: React.FC<QuizPageProps> = ({ goToHome }) => {
     setIsFetchingFact(true);
     
     try {
-      const { data: country, error: dbError } = await supabase
-        .from('countries')
-        .select('fun_fact')
-        .eq('name', countryName)
-        .single();
-
-      if (dbError && dbError.code !== 'PGRST116') {
-          throw dbError;
-      }
-
-      if (country && country.fun_fact) {
-        setFunFacts(prev => ({ ...prev, [countryName]: country.fun_fact as string }));
-        return;
-      }
-
       const apiKey = process.env.API_KEY;
       if (!apiKey || apiKey === "undefined") {
         throw new Error("Gemini API key is missing or not configured.");
@@ -65,15 +49,6 @@ const QuizPage: React.FC<QuizPageProps> = ({ goToHome }) => {
       });
       const fact = response.text;
       setFunFacts(prevFacts => ({ ...prevFacts, [countryName]: fact }));
-      
-      const { error: upsertError } = await supabase
-        .from('countries')
-        .upsert({ name: countryName, fun_fact: fact }, { onConflict: 'name' });
-      
-      if (upsertError) {
-        console.error("Error saving fun fact to DB:", upsertError);
-      }
-
     } catch (error: any) {
       const errorMessage = error?.message || "An unknown error occurred.";
       console.error("Error fetching or processing fun fact:", errorMessage, error);
